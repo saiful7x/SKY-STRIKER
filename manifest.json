@@ -1,6 +1,8 @@
 {
+  "id": "./",
   "name": "Sky Striker: Ace Command",
   "short_name": "Sky Striker",
+  "description": "Realistic vertical air combat arcade game with fighter jets and tactical power-ups.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
