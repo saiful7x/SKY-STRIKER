@@ -1,4 +1,4 @@
-const CACHE_NAME = "sky-striker-v1";
+const CACHE_NAME = "galaxy-striker-v2";
 const ASSETS = [
   "./",
   "./index.html",
