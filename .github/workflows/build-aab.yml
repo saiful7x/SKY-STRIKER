@@ -120,7 +120,7 @@ jobs:
               isChromeOSOnly: false,
               isMetaQuest: false,
               fullScopeUrl: `${cleanUrl}/`,
-              minSdkVersion: 23,
+              minSdkVersion: 24,
               orientation: "portrait",
               fingerprints: [],
               additionalTrustedOrigins: [],
