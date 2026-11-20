@@ -46,6 +46,9 @@ jobs:
         run: |
           set +o pipefail
           mkdir -p ~/.bubblewrap
+          SDK_BIN_DIR=$(dirname "$(find "$ANDROID_HOME" -type f -name "sdkmanager" 2>/dev/null | head -n 1)")
+          echo "Found sdkmanager bin: $SDK_BIN_DIR"
+          ln -sfn "$SDK_BIN_DIR" "$ANDROID_HOME/bin"
           node -e '
             const fs = require("fs");
             const path = require("path");
@@ -55,9 +58,7 @@ jobs:
             };
             fs.writeFileSync(path.join(process.env.HOME, ".bubblewrap", "config.json"), JSON.stringify(cfg, null, 2));
           '
-          if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-          fi
+          yes | "$ANDROID_HOME/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
 
       - name: Generate Keystore, Manifest & Build AAB/APK
         shell: bash
