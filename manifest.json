@@ -1,14 +1,14 @@
 {
   "id": "./",
-  "name": "Sky Striker: Ace Command",
-  "short_name": "Sky Striker",
-  "description": "Realistic vertical air combat arcade game with fighter jets and tactical power-ups.",
+  "name": "Fighter Jet: Air Combat Game",
+  "short_name": "Fighter Jet",
+  "description": "Fighter Jet Air Combat Game with 50 progressive levels, alien formations, boss battles, and upgrades.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#081224",
-  "theme_color": "#0a1628",
+  "background_color": "#040b1c",
+  "theme_color": "#050d21",
   "icons": [
     {
       "src": "icon-192.png",
