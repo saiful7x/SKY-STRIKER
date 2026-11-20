@@ -1,0 +1,130 @@
+name: Build Play Store AAB & APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: 'Your GitHub Pages URL (no trailing slash)'
+        required: true
+        default: 'https://saiful7x.github.io'
+      package_id:
+        description: 'Android Package Name'
+        required: true
+        default: 'com.saiful.galaxystriker'
+      app_name:
+        description: 'App Name'
+        required: true
+        default: 'Galaxy Striker'
+      keystore_password:
+        description: 'Keystore Password (min 6 chars)'
+        required: true
+        default: '123456'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Configure Bubblewrap SDK & JDK
+        run: |
+          mkdir -p ~/.bubblewrap
+          bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$ANDROID_HOME"
+
+      - name: Generate Keystore, Manifest & Build AAB/APK
+        env:
+          SITE_URL: ${{ inputs.site_url }}
+          PKG_ID: ${{ inputs.package_id }}
+          APP_NAME: ${{ inputs.app_name }}
+          KS_PASS: ${{ inputs.keystore_password }}
+        run: |
+          mkdir -p twa-build
+          cd twa-build
+
+          keytool -genkeypair -v -keystore android.keystore -alias android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$KS_PASS" -keypass "$KS_PASS" \
+            -dname "CN=$APP_NAME, OU=Mobile, O=Developer, L=Dhaka, ST=Dhaka, C=BD"
+
+          keytool -list -v -keystore android.keystore -alias android -storepass "$KS_PASS" > sha256.txt
+
+          node -e '
+            const fs = require("fs");
+            const cleanUrl = process.env.SITE_URL.replace(/\/+$/, "");
+            const u = new URL(cleanUrl);
+            const basePath = u.pathname === "/" ? "" : u.pathname;
+            const twa = {
+              packageId: process.env.PKG_ID,
+              host: u.host,
+              name: process.env.APP_NAME,
+              launcherName: process.env.APP_NAME,
+              display: "standalone",
+              themeColor: "#050d21",
+              themeColorDark: "#000000",
+              navigationColor: "#000000",
+              navigationColorDark: "#000000",
+              navigationDividerColor: "#000000",
+              navigationDividerColorDark: "#000000",
+              backgroundColor: "#040b1c",
+              enableNotifications: false,
+              startUrl: `${basePath}/index.html`,
+              iconUrl: `${cleanUrl}/icon-512.png`,
+              maskableIconUrl: `${cleanUrl}/icon-512.png`,
+              splashScreenFadeOutDuration: 300,
+              signingKey: {
+                path: `${process.cwd()}/android.keystore`,
+                alias: "android"
+              },
+              appVersionName: "1.0.0",
+              appVersionCode: 1,
+              shortcuts: [],
+              generatorApp: "bubblewrap-cli",
+              webManifestUrl: `${cleanUrl}/manifest.json`,
+              fallbackType: "customtabs",
+              features: {
+                playBilling: { enabled: true }
+              },
+              alphaDependencies: { enabled: false },
+              enableSiteSettingsShortcut: true,
+              isChromeOSOnly: false,
+              isMetaQuest: false,
+              fullScopeUrl: `${cleanUrl}/`,
+              minSdkVersion: 23,
+              orientation: "portrait",
+              fingerprints: [],
+              additionalTrustedOrigins: [],
+              retainedBundles: [],
+              appVersion: "1.0.0"
+            };
+            fs.writeFileSync("twa-manifest.json", JSON.stringify(twa, null, 2));
+          '
+
+          yes | bubblewrap update --skipVersionUpgrade
+          export BUBBLEWRAP_KEYSTORE_PASSWORD="$KS_PASS"
+          export BUBBLEWRAP_KEY_PASSWORD="$KS_PASS"
+          yes | bubblewrap build --skipPwaValidation
+
+      - name: Upload AAB, APK & Keystore
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-striker-bundle
+          path: |
+            twa-build/app-release-bundle.aab
+            twa-build/app-release-signed.apk
+            twa-build/android.keystore
+            twa-build/sha256.txt
