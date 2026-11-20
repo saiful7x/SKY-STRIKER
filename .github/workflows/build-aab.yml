@@ -96,7 +96,7 @@ jobs:
               navigationDividerColor: "#000000",
               navigationDividerColorDark: "#000000",
               backgroundColor: "#040b1c",
-              enableNotifications: false,
+              enableNotifications: true,
               startUrl: `${basePath}/index.html`,
               iconUrl: `${cleanUrl}/icon-512.png`,
               maskableIconUrl: `${cleanUrl}/icon-512.png`,
