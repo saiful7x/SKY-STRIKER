@@ -6,7 +6,7 @@ on:
       site_url:
         description: 'Your GitHub Pages URL (no trailing slash)'
         required: true
-        default: 'https://saiful7x.github.io'
+        default: 'https://saiful7x.github.io/SKY-STRIKER'
       package_id:
         description: 'Android Package Name'
         required: true
@@ -42,17 +42,32 @@ jobs:
         run: npm install -g @bubblewrap/cli
 
       - name: Configure Bubblewrap SDK & JDK
+        shell: bash
         run: |
+          set +o pipefail
           mkdir -p ~/.bubblewrap
-          bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$ANDROID_HOME"
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const cfg = {
+              jdkPath: process.env.JAVA_HOME,
+              androidSdkPath: process.env.ANDROID_HOME
+            };
+            fs.writeFileSync(path.join(process.env.HOME, ".bubblewrap", "config.json"), JSON.stringify(cfg, null, 2));
+          '
+          if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          fi
 
       - name: Generate Keystore, Manifest & Build AAB/APK
+        shell: bash
         env:
           SITE_URL: ${{ inputs.site_url }}
           PKG_ID: ${{ inputs.package_id }}
           APP_NAME: ${{ inputs.app_name }}
           KS_PASS: ${{ inputs.keystore_password }}
         run: |
+          set +o pipefail
           mkdir -p twa-build
           cd twa-build
 
